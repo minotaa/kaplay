@@ -16,15 +16,19 @@
     "url": "git+https://github.com/kaplayjs/kaplay.git"
   },
   "type": "module",
-  "module": "./src/index.ts",
+  "main": "./dist/kaplay.cjs",
+  "module": "./dist/kaplay.mjs",
+  "types": "./dist/doc.d.ts",
   "readme": "./README.md",
   "exports": {
     ".": {
       "import": {
-        "default": "./src/index.ts"
+        "types": "./dist/doc.d.ts",
+        "default": "./dist/kaplay.mjs"
       },
       "require": {
-        "default": "./src/index.ts"
+        "types": "./dist/doc.d.ts",
+        "default": "./dist/kaplay.cjs"
       }
     },
     "./global": "./dist/declaration/global.js"
@@ -66,7 +70,7 @@
     "fmt": "dprint fmt",
     "fmt:commit": "dprint fmt && git diff --quiet --cached && echo \"No changes\" || (git add . && git commit -m \"style: fmt\")",
     "test": "node scripts/test.js",
-    "doc-dts": "dts-bundle-generator -o dist/doc.d.ts src/index.ts",
+    "doc-dts": "dts-bundle-generator -o dist/doc.d.ts src/index.ts --external-inlines=@napi-rs/canvas --external-inlines=@kmamal/gl --external-inlines=@kmamal/sdl",
     "test:vite": "vitest --typecheck",
     "desktop": "tauri dev",
     "publish:next": "npm publish --tag next",
@@ -102,7 +106,9 @@
   },
   "dependencies": {
     "@kmamal/gl": "^9.1.0",
-    "@kmamal/sdl": "^0.11.13"
+    "@kmamal/sdl": "^0.11.13",
+    "@napi-rs/canvas": "^0.1.80",
+    "@types/node": "^24.6.2"
   },
   "trustedDependencies": [
     "@kmamal/gl",

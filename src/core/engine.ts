@@ -35,9 +35,6 @@ import { createFrameRenderer } from "./frameRendering";
 
 export type Engine = ReturnType<typeof createEngine>;
 
-// Create global variables
-window.kaplayjs_assetsAliases = {};
-
 /**
  * Creates all necessary contexts and variables for running a KAPLAY instance.
  *

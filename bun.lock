@@ -7,6 +7,7 @@
         "@kmamal/gl": "^9.1.0",
         "@kmamal/sdl": "^0.11.13",
         "@napi-rs/canvas": "^0.1.80",
+        "@types/node": "^24.6.2",
       },
       "devDependencies": {
         "@eslint/js": "^9.27.0",

@@ -1250,17 +1250,17 @@ export const initApp = (
     // }
 
     for (const [name, val] of Object.entries(docEvents)) {
-        document.addEventListener(
-            name,
-            val as EventListenerOrEventListenerObject,
-        );
+        // document.addEventListener(
+        //     name,
+        //     val as EventListenerOrEventListenerObject,
+        // );
     }
 
     for (const [name, val] of Object.entries(winEvents)) {
-        window.addEventListener(
-            name,
-            val as EventListenerOrEventListenerObject,
-        );
+        // window.addEventListener(
+        //     name,
+        //     val as EventListenerOrEventListenerObject,
+        // );
     }
 
     // const resizeObserver = new ResizeObserver((entries) => {

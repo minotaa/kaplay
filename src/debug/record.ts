@@ -54,9 +54,9 @@ export interface Recording {
 
 // https://stackoverflow.com/a/57168358/23626926
 
-const a = new AudioBuffer({ length: 1, sampleRate: 44100 });
-a.getChannelData(0).set([.01], 0);
-const dummy = new SoundData(a);
+// const a = new AudioBuffer({ length: 1, sampleRate: 44100 });
+// a.getChannelData(0).set([.01], 0);
+// const dummy = new SoundData(a);
 
 export const record = (frameRate?: number, mimeTypes?: string[]): Recording => {
     throw new Error("not implemented");

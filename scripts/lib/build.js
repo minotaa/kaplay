@@ -52,6 +52,11 @@ export const config = {
     define: {
         "KAPLAY_VERSION": JSON.stringify(pkgVersion),
     },
+    external: [
+        "@napi-rs/canvas",
+        "@kmamal/gl",
+        "@kmamal/sdl"
+    ]
 };
 
 export async function build(fast = false) {

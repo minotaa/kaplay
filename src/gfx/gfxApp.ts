@@ -14,6 +14,7 @@ import type { MustKAPLAYOpt } from "../types";
 import type { FontAtlas } from "./formatText";
 import { FrameBuffer } from "./FrameBuffer";
 import { BatchRenderer, type GfxCtx, Texture } from "./gfx";
+import { ImageData } from "@napi-rs/canvas";
 
 export type AppGfxCtx = {
     /** How many draw calls we're doing last frame */

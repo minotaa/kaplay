@@ -11,10 +11,10 @@
     "declaration": true,
     "declarationMap": true,
     "declarationDir": "dist/declaration",
-    // always use import type for type only imports
     "verbatimModuleSyntax": true,
     "strict": true,
     "types": [
+      "node",
       "./src/.env.d.ts"
     ]
   },
