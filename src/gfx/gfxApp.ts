@@ -1,3 +1,4 @@
+import type { WebGLRenderingContext } from "@kmamal/gl";
 import { makeShader, type Shader, type Uniform } from "../assets/shader";
 import {
     DEF_FRAG,

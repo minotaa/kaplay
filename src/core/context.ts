@@ -646,7 +646,7 @@ export const createContext = (
         // char sets
         ASCII_CHARS,
         // dom
-        canvas: app.canvas,
+        window: app.window,
         // misc
         addKaboom,
         // dirs

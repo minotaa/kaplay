@@ -59,121 +59,122 @@ a.getChannelData(0).set([.01], 0);
 const dummy = new SoundData(a);
 
 export const record = (frameRate?: number, mimeTypes?: string[]): Recording => {
-    if (_k.debug.curRecording !== null) {
-        throw new Error("Recording is already in progress.");
-    }
+    throw new Error("not implemented");
+    // if (_k.debug.curRecording !== null) {
+    //     throw new Error("Recording is already in progress.");
+    // }
 
-    const options: MediaRecorderOptions = {};
+    // const options: MediaRecorderOptions = {};
 
-    if (mimeTypes !== undefined) {
-        const mimeType = mimeTypes.find(mime =>
-            MediaRecorder.isTypeSupported(mime)
-        );
+    // if (mimeTypes !== undefined) {
+    //     const mimeType = mimeTypes.find(mime =>
+    //         MediaRecorder.isTypeSupported(mime)
+    //     );
 
-        if (mimeType === undefined) {
-            throw new Error(
-                `None of the provided MIME types (${
-                    mimeTypes.join(", ")
-                }) are supported for recording${
-                    mimeTypes.some(mime => /^video\//.test(mime))
-                        ? ""
-                        : " (hint: it must look like 'video/xxx')"
-                }.`,
-            );
-        }
+    //     if (mimeType === undefined) {
+    //         throw new Error(
+    //             `None of the provided MIME types (${
+    //                 mimeTypes.join(", ")
+    //             }) are supported for recording${
+    //                 mimeTypes.some(mime => /^video\//.test(mime))
+    //                     ? ""
+    //                     : " (hint: it must look like 'video/xxx')"
+    //             }.`,
+    //         );
+    //     }
 
-        options.mimeType = mimeType;
-    }
+    //     options.mimeType = mimeType;
+    // }
 
-    const audioDest = _k.audio.ctx.createMediaStreamDestination();
+    // const audioDest = _k.audio.ctx.createMediaStreamDestination();
 
-    _k.audio.masterNode.connect(audioDest);
+    // _k.audio.masterNode.connect(audioDest);
 
-    const audioStream = audioDest.stream;
-    const [firstAudioTrack] = audioStream.getAudioTracks();
-    const canvasStream = _k.app.canvas.captureStream(frameRate);
-    const [firstCanvasTrack] = canvasStream.getVideoTracks();
+    // const audioStream = audioDest.stream;
+    // const [firstAudioTrack] = audioStream.getAudioTracks();
+    // const canvasStream = _k.app.canvas.captureStream(frameRate);
+    // const [firstCanvasTrack] = canvasStream.getVideoTracks();
 
-    const recorder = new MediaRecorder(
-        new MediaStream([firstAudioTrack, firstCanvasTrack]),
-        options,
-    );
+    // const recorder = new MediaRecorder(
+    //     new MediaStream([firstAudioTrack, firstCanvasTrack]),
+    //     options,
+    // );
 
-    // dummy to make audio work
-    play(dummy);
+    // // dummy to make audio work
+    // play(dummy);
 
-    const chunks: any[] = [];
+    // const chunks: any[] = [];
 
-    const defaultExt = /\/(.+?)(;|$)/.exec(recorder.mimeType)![1]!;
-    recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-            chunks.push(e.data);
-        }
-    };
+    // const defaultExt = /\/(.+?)(;|$)/.exec(recorder.mimeType)![1]!;
+    // recorder.ondataavailable = (e) => {
+    //     if (e.data.size > 0) {
+    //         chunks.push(e.data);
+    //     }
+    // };
 
-    recorder.onerror = () => {
-        _k.audio.masterNode.disconnect(audioDest);
-        canvasStream.getTracks().forEach(t => t.stop());
-    };
+    // recorder.onerror = () => {
+    //     _k.audio.masterNode.disconnect(audioDest);
+    //     canvasStream.getTracks().forEach(t => t.stop());
+    // };
 
-    recorder.start();
+    // recorder.start();
 
-    var finalized = false;
+    // var finalized = false;
 
-    const checkFinalized = () => {
-        if (finalized) {
-            throw new Error(
-                "Recording has been finalized, you must start a new recording",
-            );
-        }
-    };
+    // const checkFinalized = () => {
+    //     if (finalized) {
+    //         throw new Error(
+    //             "Recording has been finalized, you must start a new recording",
+    //         );
+    //     }
+    // };
 
-    const rec: Recording = {
-        resume() {
-            checkFinalized();
-            recorder.resume();
-        },
+    // const rec: Recording = {
+    //     resume() {
+    //         checkFinalized();
+    //         recorder.resume();
+    //     },
 
-        pause() {
-            checkFinalized();
-            recorder.pause();
-        },
+    //     pause() {
+    //         checkFinalized();
+    //         recorder.pause();
+    //     },
 
-        stop(): Promise<Blob> {
-            checkFinalized();
-            finalized = true;
-            _k.debug.curRecording = null;
-            recorder.stop();
-            // cleanup
-            _k.audio.masterNode.disconnect(audioDest);
-            canvasStream.getTracks().forEach(t => t.stop());
-            return new Promise((resolve) => {
-                recorder.onstop = () => {
-                    resolve(
-                        new Blob(chunks, {
-                            type: recorder.mimeType,
-                        }),
-                    );
-                };
-            });
-        },
+    //     stop(): Promise<Blob> {
+    //         checkFinalized();
+    //         finalized = true;
+    //         _k.debug.curRecording = null;
+    //         recorder.stop();
+    //         // cleanup
+    //         _k.audio.masterNode.disconnect(audioDest);
+    //         canvasStream.getTracks().forEach(t => t.stop());
+    //         return new Promise((resolve) => {
+    //             recorder.onstop = () => {
+    //                 resolve(
+    //                     new Blob(chunks, {
+    //                         type: recorder.mimeType,
+    //                     }),
+    //                 );
+    //             };
+    //         });
+    //     },
 
-        get mimeType() {
-            return recorder.mimeType;
-        },
+    //     get mimeType() {
+    //         return recorder.mimeType;
+    //     },
 
-        get fileExt() {
-            return defaultExt;
-        },
+    //     get fileExt() {
+    //         return defaultExt;
+    //     },
 
-        download(
-            filename = `kaplay-${new Date().toISOString()}.${defaultExt}`,
-        ) {
-            this.stop().then((blob) => downloadBlob(filename, blob));
-        },
-    };
+    //     download(
+    //         filename = `kaplay-${new Date().toISOString()}.${defaultExt}`,
+    //     ) {
+    //         this.stop().then((blob) => downloadBlob(filename, blob));
+    //     },
+    // };
 
-    _k.debug.curRecording = rec;
+    // _k.debug.curRecording = rec;
 
-    return rec;
+    // return rec;
 };

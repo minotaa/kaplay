@@ -1,3 +1,4 @@
+import type { Sdl } from "@kmamal/sdl";
 import type {
     ButtonBinding,
     ButtonBindingDevice,
@@ -6499,12 +6500,12 @@ export interface KAPLAYCtx {
      */
     BLACK: Color;
     /**
-     * The canvas DOM KAPLAY is currently using.
+     * The window KAPLAY is running in.
      *
      * @since v2000.0
      * @group Info
      */
-    canvas: HTMLCanvasElement;
+    window: Sdl.Video.Window;
     /**
      * EventHandler for one single event.
      *

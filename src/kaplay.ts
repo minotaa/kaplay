@@ -145,7 +145,7 @@ export const kaplay = <
     );
 
     if (gopt.focus !== false) {
-        app.canvas.focus();
+        app.window.focus();
     }
 
     return ctx as KAPLAYGame<O>;

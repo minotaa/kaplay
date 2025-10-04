@@ -101,18 +101,19 @@ export function loadFont(
     src: string | ArrayBuffer | ArrayBufferView,
     opt: LoadFontOpt = {},
 ): Asset<FontData> {
-    const font = new FontFace(
-        name,
-        typeof src === "string" ? `url(${src})` : src,
-    );
-    document.fonts.add(font);
+    throw new Error("not implemented");
+    // const font = new FontFace(
+    //     name,
+    //     typeof src === "string" ? `url(${src})` : src,
+    // );
+    // document.fonts.add(font);
 
-    return _k.assets.fonts.add(
-        name,
-        font.load().catch((err) => {
-            throw new Error(`Failed to load font from "${src}": ${err}`);
-        }).then((face) => new FontData(face, opt)),
-    );
+    // return _k.assets.fonts.add(
+    //     name,
+    //     font.load().catch((err) => {
+    //         throw new Error(`Failed to load font from "${src}": ${err}`);
+    //     }).then((face) => new FontData(face, opt)),
+    // );
 }
 
 export function makeFont(

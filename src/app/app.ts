@@ -32,6 +32,7 @@ import {
     type ButtonsDef,
     parseButtonBindings,
 } from "./inputBindings";
+import type { Sdl } from "@kmamal/sdl";
 
 export class ButtonState<T = string> {
     pressed: Set<T> = new Set([]);
@@ -100,7 +101,7 @@ export type AppEvents = keyof {
  * @returns The app state.
  */
 export const initAppState = (opt: {
-    canvas: HTMLCanvasElement;
+    window: Sdl.Video.Window;
     touchToMouse?: boolean;
     gamepads?: Record<string, GamepadDef>;
     pixelDensity?: number;
@@ -110,7 +111,7 @@ export const initAppState = (opt: {
     const buttons = opt.buttons ?? {};
 
     return {
-        canvas: opt.canvas,
+        window: opt.window,
         buttons: buttons,
         buttonsByKey: new Map<Key, string[]>(),
         buttonsByMouse: new Map<MouseButton, string[]>(),
@@ -141,8 +142,8 @@ export const initAppState = (opt: {
         gamepads: [] as KGamepad[],
         charInputted: [] as string[],
         isMouseMoved: false,
-        lastWidth: opt.canvas.offsetWidth,
-        lastHeight: opt.canvas.offsetHeight,
+        lastWidth: opt.window.width,
+        lastHeight: opt.window.height,
         events: new KEventHandler<AppEventMap>(),
     };
 };
@@ -159,11 +160,11 @@ export const initAppState = (opt: {
  */
 export const initApp = (
     opt: {
-        canvas: HTMLCanvasElement;
+        window: Sdl.Video.Window;
     } & KAPLAYOpt,
 ) => {
-    if (!opt.canvas) {
-        throw new Error("Please provide a canvas");
+    if (!opt.window) {
+        throw new Error("Please provide a window");
     }
 
     const state = initAppState(opt);
@@ -198,27 +199,33 @@ export const initApp = (
     }
 
     function screenshot(): string {
-        return state.canvas.toDataURL();
+        throw new Error('not implemented');
+        //return state.canvas.toDataURL();
     }
 
     function screenshotToBlob(): Promise<Blob> {
-        return new Promise<Blob>((resolve, reject) => {
-            state.canvas.toBlob(b => {
+        throw new Error('not implemented');
+        /*return new Promise<Blob>((resolve, reject) => {
+            state.window.toBlob(b => {
                 if (b !== null) resolve(b);
                 else reject(new Error("failed to make blob"));
             });
-        });
+        });*/
     }
 
     function setCursor(c: Cursor): void {
-        state.canvas.style.cursor = c;
+        throw new Error('not implemented');
+        //state.canvas.style.cursor = c;
     }
 
     function getCursor(): Cursor {
-        return state.canvas.style.cursor;
+        throw new Error('not implemented');
+        //return state.canvas.style.cursor;
     }
 
     function setCursorLocked(b: boolean): void {
+        throw new Error('not implemented');
+        /*
         if (b) {
             try {
                 const res = state.canvas
@@ -232,7 +239,7 @@ export const initApp = (
         }
         else {
             document.exitPointerLock();
-        }
+        }*/
     }
 
     function isCursorLocked(): boolean {
@@ -253,25 +260,32 @@ export const initApp = (
     }
 
     function setFullscreen(f: boolean = true) {
+        throw new Error('not implemented');
+        /*
         if (f) {
             enterFullscreen(state.canvas);
         }
         else {
             exitFullscreen();
-        }
+        }*/
     }
 
     function isFullscreen(): boolean {
+        throw new Error('not implemented');
+        /*
         return document.fullscreenElement === state.canvas
             // @ts-ignore
-            || document.webkitFullscreenElement === state.canvas;
+            || document.webkitFullscreenElement === state.canvas;*/
     }
 
     const isFocused = () => {
-        return document.activeElement === state.canvas;
+        throw new Error('not implemented');
+        //return document.activeElement === state.canvas;
     };
 
     function quit() {
+        throw new Error('not implemented');
+        /*
         state.stopped = true;
         const ce = Object.entries(canvasEvents);
         const de = Object.entries(docEvents);
@@ -286,7 +300,7 @@ export const initApp = (
         for (const [name, val] of we) {
             window.removeEventListener(name, val as EL);
         }
-        resizeObserver.disconnect();
+        resizeObserver.disconnect();*/
     }
 
     function run(
@@ -752,102 +766,104 @@ export const initApp = (
 
     // TODO: Clean up this function
     function processGamepad() {
-        for (const browserGamepad of navigator.getGamepads()) {
-            if (
-                browserGamepad && !state.gamepadStates.has(
-                    browserGamepad.index,
-                )
-            ) {
-                registerGamepad(browserGamepad);
-            }
-        }
+        throw new Error('not implemented');
+        
+        // for (const browserGamepad of navigator.getGamepads()) {
+        //     if (
+        //         browserGamepad && !state.gamepadStates.has(
+        //             browserGamepad.index,
+        //         )
+        //     ) {
+        //         registerGamepad(browserGamepad);
+        //     }
+        // }
 
-        for (const gamepad of state.gamepads) {
-            const browserGamepad = navigator.getGamepads()[gamepad.index];
-            if (!browserGamepad) continue;
+        // for (const gamepad of state.gamepads) {
+        //     const browserGamepad = navigator.getGamepads()[gamepad.index];
+        //     if (!browserGamepad) continue;
 
-            const customMap = opt.gamepads ?? {};
-            const map = customMap[browserGamepad.id]
-                || GP_MAP[browserGamepad.id] || GP_MAP["default"];
-            const gamepadState = state.gamepadStates.get(gamepad.index);
-            if (!gamepadState) continue;
+        //     const customMap = opt.gamepads ?? {};
+        //     const map = customMap[browserGamepad.id]
+        //         || GP_MAP[browserGamepad.id] || GP_MAP["default"];
+        //     const gamepadState = state.gamepadStates.get(gamepad.index);
+        //     if (!gamepadState) continue;
 
-            for (let i = 0; i < browserGamepad.buttons.length; i++) {
-                const gamepadBtn = map.buttons[i];
-                const browserGamepadBtn = browserGamepad.buttons[i];
-                const isGamepadButtonBind = state.buttonsByGamepad.has(
-                    gamepadBtn,
-                );
+        //     for (let i = 0; i < browserGamepad.buttons.length; i++) {
+        //         const gamepadBtn = map.buttons[i];
+        //         const browserGamepadBtn = browserGamepad.buttons[i];
+        //         const isGamepadButtonBind = state.buttonsByGamepad.has(
+        //             gamepadBtn,
+        //         );
 
-                if (browserGamepadBtn.pressed) {
-                    if (gamepadState.buttonState.down.has(gamepadBtn)) {
-                        state.events.trigger(
-                            "gamepadButtonDown",
-                            gamepadBtn,
-                            gamepad,
-                        );
+        //         if (browserGamepadBtn.pressed) {
+        //             if (gamepadState.buttonState.down.has(gamepadBtn)) {
+        //                 state.events.trigger(
+        //                     "gamepadButtonDown",
+        //                     gamepadBtn,
+        //                     gamepad,
+        //                 );
 
-                        continue;
-                    }
+        //                 continue;
+        //             }
 
-                    state.lastInputDevice = "gamepad";
+        //             state.lastInputDevice = "gamepad";
 
-                    if (isGamepadButtonBind) {
-                        // replicate input in merged state, defined button state and gamepad state
-                        state.buttonsByGamepad.get(gamepadBtn)?.forEach(
-                            (btn) => {
-                                state.buttonState.press(btn);
-                                state.events.trigger("buttonPress", btn);
-                            },
-                        );
-                    }
+        //             if (isGamepadButtonBind) {
+        //                 // replicate input in merged state, defined button state and gamepad state
+        //                 state.buttonsByGamepad.get(gamepadBtn)?.forEach(
+        //                     (btn) => {
+        //                         state.buttonState.press(btn);
+        //                         state.events.trigger("buttonPress", btn);
+        //                     },
+        //                 );
+        //             }
 
-                    state.mergedGamepadState.buttonState.press(gamepadBtn);
-                    gamepadState.buttonState.press(gamepadBtn);
-                    state.events.trigger(
-                        "gamepadButtonPress",
-                        gamepadBtn,
-                        gamepad,
-                    );
-                }
-                else if (gamepadState.buttonState.down.has(gamepadBtn)) {
-                    if (isGamepadButtonBind) {
-                        state.buttonsByGamepad.get(gamepadBtn)?.forEach(
-                            (btn) => {
-                                state.buttonState.release(btn);
-                                state.events.trigger("buttonRelease", btn);
-                            },
-                        );
-                    }
+        //             state.mergedGamepadState.buttonState.press(gamepadBtn);
+        //             gamepadState.buttonState.press(gamepadBtn);
+        //             state.events.trigger(
+        //                 "gamepadButtonPress",
+        //                 gamepadBtn,
+        //                 gamepad,
+        //             );
+        //         }
+        //         else if (gamepadState.buttonState.down.has(gamepadBtn)) {
+        //             if (isGamepadButtonBind) {
+        //                 state.buttonsByGamepad.get(gamepadBtn)?.forEach(
+        //                     (btn) => {
+        //                         state.buttonState.release(btn);
+        //                         state.events.trigger("buttonRelease", btn);
+        //                     },
+        //                 );
+        //             }
 
-                    state.mergedGamepadState.buttonState.release(
-                        gamepadBtn,
-                    );
-                    gamepadState.buttonState.release(gamepadBtn);
+        //             state.mergedGamepadState.buttonState.release(
+        //                 gamepadBtn,
+        //             );
+        //             gamepadState.buttonState.release(gamepadBtn);
 
-                    state.events.trigger(
-                        "gamepadButtonRelease",
-                        gamepadBtn,
-                        gamepad,
-                    );
-                }
-            }
+        //             state.events.trigger(
+        //                 "gamepadButtonRelease",
+        //                 gamepadBtn,
+        //                 gamepad,
+        //             );
+        //         }
+        //     }
 
-            for (const stickName in map.sticks) {
-                const stick = map.sticks[stickName as KGamepadStick];
-                if (!stick) continue;
-                const value = new Vec2(
-                    browserGamepad.axes[stick.x],
-                    browserGamepad.axes[stick.y],
-                );
-                gamepadState.stickState.set(stickName as KGamepadStick, value);
-                state.mergedGamepadState.stickState.set(
-                    stickName as KGamepadStick,
-                    value,
-                );
-                state.events.trigger("gamepadStick", stickName, value, gamepad);
-            }
-        }
+        //     for (const stickName in map.sticks) {
+        //         const stick = map.sticks[stickName as KGamepadStick];
+        //         if (!stick) continue;
+        //         const value = new Vec2(
+        //             browserGamepad.axes[stick.x],
+        //             browserGamepad.axes[stick.y],
+        //         );
+        //         gamepadState.stickState.set(stickName as KGamepadStick, value);
+        //         state.mergedGamepadState.stickState.set(
+        //             stickName as KGamepadStick,
+        //             value,
+        //         );
+        //         state.events.trigger("gamepadStick", stickName, value, gamepad);
+        //     }
+        // }
     }
 
     type EventList<M> = {
@@ -871,8 +887,8 @@ export const initApp = (
         const mouseDeltaPos = new Vec2(e.movementX, e.movementY);
 
         if (isFullscreen()) {
-            const cw = state.canvas.width / pd;
-            const ch = state.canvas.height / pd;
+            const cw = state.window.width / pd;
+            const ch = state.window.height / pd;
             const ww = window.innerWidth;
             const wh = window.innerHeight;
             const rw = ww / wh;
@@ -1035,6 +1051,7 @@ export const initApp = (
         });
     };
 
+    /*
     // TODO: handle all touches at once instead of sequentially
     canvasEvents.touchstart = (e) => {
         // disable long tap context menu
@@ -1077,8 +1094,9 @@ export const initApp = (
                 );
             });
         });
-    };
+    };*/
 
+    /*
     canvasEvents.touchmove = (e) => {
         // disable scrolling
         e.preventDefault();
@@ -1111,8 +1129,9 @@ export const initApp = (
                 );
             });
         });
-    };
+    };*/
 
+    /*
     canvasEvents.touchend = (e) => {
         state.events.onOnce("input", () => {
             const touches = [...e.changedTouches];
@@ -1151,38 +1170,38 @@ export const initApp = (
                 );
             });
         });
-    };
+    };*/
 
-    canvasEvents.touchcancel = (e) => {
-        state.events.onOnce("input", () => {
-            const touches = [...e.changedTouches];
-            const box = state.canvas.getBoundingClientRect();
+    // canvasEvents.touchcancel = (e) => {
+    //     state.events.onOnce("input", () => {
+    //         const touches = [...e.changedTouches];
+    //         const box = state.canvas.getBoundingClientRect();
 
-            if (opt.touchToMouse !== false) {
-                state.mousePos = canvasToViewport(
-                    new Vec2(
-                        touches[0].clientX - box.x,
-                        touches[0].clientY - box.y,
-                    ),
-                );
-                state.mouseState.release("left");
-                state.events.trigger("mouseRelease", "left");
-            }
+    //         if (opt.touchToMouse !== false) {
+    //             state.mousePos = canvasToViewport(
+    //                 new Vec2(
+    //                     touches[0].clientX - box.x,
+    //                     touches[0].clientY - box.y,
+    //                 ),
+    //             );
+    //             state.mouseState.release("left");
+    //             state.events.trigger("mouseRelease", "left");
+    //         }
 
-            touches.forEach((t) => {
-                state.events.trigger(
-                    "touchEnd",
-                    canvasToViewport(
-                        new Vec2(
-                            t.clientX - box.x,
-                            t.clientY - box.y,
-                        ),
-                    ),
-                    t,
-                );
-            });
-        });
-    };
+    //         touches.forEach((t) => {
+    //             state.events.trigger(
+    //                 "touchEnd",
+    //                 canvasToViewport(
+    //                     new Vec2(
+    //                         t.clientX - box.x,
+    //                         t.clientY - box.y,
+    //                     ),
+    //                 ),
+    //                 t,
+    //             );
+    //         });
+    //     });
+    // };
 
     // TODO: option to not prevent default?
     canvasEvents.wheel = (e) => {
@@ -1223,12 +1242,12 @@ export const initApp = (
         });
     };
 
-    for (const [name, val] of Object.entries(canvasEvents)) {
-        state.canvas.addEventListener(
-            name,
-            val as EventListenerOrEventListenerObject,
-        );
-    }
+    // for (const [name, val] of Object.entries(canvasEvents)) {
+    //     state.canvas.addEventListener(
+    //         name,
+    //         val as EventListenerOrEventListenerObject,
+    //     );
+    // }
 
     for (const [name, val] of Object.entries(docEvents)) {
         document.addEventListener(
@@ -1244,22 +1263,22 @@ export const initApp = (
         );
     }
 
-    const resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-            if (entry.target !== state.canvas) continue;
-            if (
-                state.lastWidth === state.canvas.offsetWidth
-                && state.lastHeight === state.canvas.offsetHeight
-            ) return;
-            state.lastWidth = state.canvas.offsetWidth;
-            state.lastHeight = state.canvas.offsetHeight;
-            state.events.onOnce("input", () => {
-                state.events.trigger("resize");
-            });
-        }
-    });
+    // const resizeObserver = new ResizeObserver((entries) => {
+    //     for (const entry of entries) {
+    //         if (entry.target !== state.canvas) continue;
+    //         if (
+    //             state.lastWidth === state.canvas.offsetWidth
+    //             && state.lastHeight === state.canvas.offsetHeight
+    //         ) return;
+    //         state.lastWidth = state.canvas.offsetWidth;
+    //         state.lastHeight = state.canvas.offsetHeight;
+    //         state.events.onOnce("input", () => {
+    //             state.events.trigger("resize");
+    //         });
+    //     }
+    // });
 
-    resizeObserver.observe(state.canvas);
+    // resizeObserver.observe(state.canvas);
 
     return {
         state,
@@ -1268,7 +1287,7 @@ export const initApp = (
         restDt,
         time,
         run,
-        canvas: state.canvas,
+        window: state.window,
         fps,
         numFrames,
         quit,

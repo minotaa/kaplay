@@ -1,3 +1,4 @@
+import type { Sdl } from "@kmamal/sdl";
 import type { ButtonsDef } from "./app/inputBindings";
 import type { Asset } from "./assets/asset";
 import type { ShaderData, Uniform } from "./assets/shader";
@@ -11,6 +12,7 @@ import type { Color, RGBAValue, RGBValue } from "./math/color";
 import type { Circle, Ellipse, Line, Point, Polygon, Rect } from "./math/math";
 import type { Vec2 } from "./math/Vec2";
 import type { Defined, MergeObj } from "./utils/types";
+import type { Canvas as NapiCanvas } from "@napi-rs/canvas";
 
 export type Tag = string;
 
@@ -224,6 +226,11 @@ export type MustKAPLAYOpt = {
  */
 export interface KAPLAYOpt {
     /**
+     * Title of the game window (defaults to "KAPLAY Game").
+     */
+    title?: string;
+
+    /**
      * Width of game.
      */
     width?: number;
@@ -263,9 +270,9 @@ export interface KAPLAYOpt {
      */
     crisp?: boolean;
     /**
-     * The canvas DOM element to use. If empty will create one.
+     * The SDL window. If empty will create one.
      */
-    canvas?: HTMLCanvasElement;
+    window?: Sdl.Video.Window;
     /**
      * The container DOM element to insert the canvas if created. Defaults to document.body.
      */
@@ -566,7 +573,13 @@ export type TextureOpt = {
  * @group Assets
  * @subgroup Types
  */
-export type ImageSource = Exclude<TexImageSource, VideoFrame>;
+export type ImageSource = NativeImageElement | NapiCanvas;
+
+export type NativeImageElement = {
+    data: ArrayBufferView;
+    width: number;
+    height: number;
+}
 
 /**
  * @group Rendering

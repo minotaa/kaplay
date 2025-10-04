@@ -2,6 +2,7 @@ import { Quad } from "../math/math";
 import { Vec2 } from "../math/Vec2";
 import type { ImageSource } from "../types";
 import { type GfxCtx, Texture } from "./gfx";
+import { Canvas, createCanvas, type CanvasRenderingContext2D } from "@napi-rs/canvas";
 
 export class TexPacker {
     private lastTextureId: number = 0;
@@ -12,7 +13,7 @@ export class TexPacker {
         size: Vec2;
         texture: Texture;
     }> = new Map();
-    private canvas: HTMLCanvasElement;
+    private canvas: Canvas;
     private c2d: CanvasRenderingContext2D;
     private x: number = 0;
     private y: number = 0;
@@ -22,7 +23,7 @@ export class TexPacker {
 
     constructor(gfx: GfxCtx, w: number, h: number, padding: number) {
         this.gfx = gfx;
-        this.canvas = document.createElement("canvas");
+        this.canvas = createCanvas(w, h);
         this.canvas.width = w;
         this.canvas.height = h;
         this.textures = [Texture.fromImage(gfx, this.canvas)];
@@ -81,7 +82,8 @@ export class TexPacker {
             this.c2d.putImageData(img, pos.x, pos.y);
         }
         else {
-            this.c2d.drawImage(img, pos.x, pos.y);
+            throw new Error("not implemented");
+            //this.c2d.drawImage(img, pos.x, pos.y);
         }
 
         curTex.update(this.canvas);

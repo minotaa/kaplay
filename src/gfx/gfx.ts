@@ -1,3 +1,4 @@
+import type { WebGLRenderingContext, WebGLTexture } from "@kmamal/gl";
 import type { Shader, Uniform } from "../assets/shader";
 import { IDENTITY_MATRIX } from "../constants/math";
 import { getCamTransform } from "../game/camera";
@@ -61,7 +62,7 @@ export class Texture {
                 0,
                 gl.RGBA,
                 gl.UNSIGNED_BYTE,
-                null,
+                new Int8Array(),
             );
         }
 
@@ -69,7 +70,7 @@ export class Texture {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
         this.unbind();
     }
 
@@ -78,23 +79,27 @@ export class Texture {
         img: ImageSource,
         opt: TextureOpt = {},
     ): Texture {
-        const tex = new Texture(ctx, img.width, img.height, opt);
-        tex.update(img);
-        tex.src = img;
-        return tex;
+        throw new Error("not implemented");
+        // const tex = new Texture(ctx, img.width, img.height, opt);
+        // tex.update(img);
+        // tex.src = img;
+        // return tex;
     }
 
     update(img: ImageSource, x = 0, y = 0) {
         const gl = this.ctx.gl;
         this.bind();
+        const data = typeof img.data == 'function' ? img.data() : img.data;
         gl.texSubImage2D(
             gl.TEXTURE_2D,
             0,
             x,
-            y,
+            y,-
+            this.width,
+            this.height,
             gl.RGBA,
             gl.UNSIGNED_BYTE,
-            img,
+            data,
         );
         this.unbind();
     }
@@ -485,8 +490,8 @@ export function initGfx(gl: WebGLRenderingContext, opts: KAPLAYOpt = {}) {
 
     function destroy() {
         gc.forEach((action) => action());
-        const extension = gl.getExtension("WEBGL_lose_context");
-        if (extension) extension.loseContext();
+        // const extension = gl.getExtension("WEBGL_lose_context");
+        // if (extension) extension.loseContext();
     }
 
     let curVertexFormat: object | null = null;
@@ -509,25 +514,34 @@ export function initGfx(gl: WebGLRenderingContext, opts: KAPLAYOpt = {}) {
         }, 0);
     }
 
-    const [pushTexture2D, popTexture2D] = genStack<WebGLTexture>((t) =>
+    const [pushTexture2D, popTexture2D] = genStack<WebGLTexture>((t) => {
+        if (!t) throw new Error("Cannot bind null texture");
         gl.bindTexture(gl.TEXTURE_2D, t)
-    );
+    });
 
-    const [pushArrayBuffer, popArrayBuffer] = genStack<WebGLBuffer>((b) =>
+    const [pushArrayBuffer, popArrayBuffer] = genStack<WebGLBuffer>((b) => {
+        if (!b) throw new Error("Cannot bind null array buffer");
         gl.bindBuffer(gl.ARRAY_BUFFER, b)
-    );
+    });
 
     const [pushElementArrayBuffer, popElementArrayBuffer] = genStack<
         WebGLBuffer
-    >((b) => gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b));
+    >((b) => {
+        if (!b) throw new Error("Cannot bind null element array buffer");
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b)
+    });
 
-    const [pushFramebuffer, popFramebuffer] = genStack<WebGLFramebuffer>((b) =>
+    const [pushFramebuffer, popFramebuffer] = genStack<WebGLFramebuffer>((b) => {
+        if (!b) throw new Error("Cannot bind null framebuffer");
         gl.bindFramebuffer(gl.FRAMEBUFFER, b)
-    );
+    });
 
     const [pushRenderbuffer, popRenderbuffer] = genStack<WebGLRenderbuffer>((
         b,
-    ) => gl.bindRenderbuffer(gl.RENDERBUFFER, b));
+    ) => {
+        if (!b) throw new Error("Cannot bind null renderbuffer"); 
+        gl.bindRenderbuffer(gl.RENDERBUFFER, b)
+    });
 
     const [pushViewport, popViewport] = genStack<
         { x: number; y: number; w: number; h: number }
@@ -538,9 +552,10 @@ export function initGfx(gl: WebGLRenderingContext, opts: KAPLAYOpt = {}) {
         gl.viewport(x, y, w, h);
     });
 
-    const [pushProgram, popProgram] = genStack<WebGLProgram>((p) =>
+    const [pushProgram, popProgram] = genStack<WebGLProgram>((p) => {
+        if (!p) throw new Error("Cannot bind null program");
         gl.useProgram(p)
-    );
+    });
 
     pushViewport({
         x: 0,

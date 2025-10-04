@@ -295,31 +295,32 @@ export function createSpriteSheet(
     images: ImageSource[],
     opt: LoadSpriteOpt = {},
 ): SpriteData {
-    const canvas = document.createElement("canvas");
-    const width = images[0].width;
-    const height = images[0].height;
-    canvas.width = width * images.length;
-    canvas.height = height;
+    throw new Error("not implemented");
+    // const canvas = document.createElement("canvas");
+    // const width = images[0].width;
+    // const height = images[0].height;
+    // canvas.width = width * images.length;
+    // canvas.height = height;
 
-    const c2d = canvas.getContext("2d");
-    if (!c2d) throw new Error("Failed to create canvas context");
+    // const c2d = canvas.getContext("2d");
+    // if (!c2d) throw new Error("Failed to create canvas context");
 
-    images.forEach((img, i) => {
-        if (img instanceof ImageData) {
-            c2d.putImageData(img, i * width, 0);
-        }
-        else {
-            c2d.drawImage(img, i * width, 0);
-        }
-    });
+    // images.forEach((img, i) => {
+    //     if (img instanceof ImageData) {
+    //         c2d.putImageData(img, i * width, 0);
+    //     }
+    //     else {
+    //         c2d.drawImage(img.data, i * width, 0);
+    //     }
+    // });
 
-    const merged = c2d.getImageData(0, 0, images.length * width, height);
+    // const merged = c2d.getImageData(0, 0, images.length * width, height);
 
-    return SpriteData.fromImage(merged, {
-        ...opt,
-        sliceX: images.length,
-        sliceY: 1,
-    });
+    // return SpriteData.fromImage(merged, {
+    //     ...opt,
+    //     sliceX: images.length,
+    //     sliceY: 1,
+    // });
 }
 
 export function loadBean(name: string = "bean"): Asset<SpriteData> {

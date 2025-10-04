@@ -4,7 +4,7 @@ import { KEvent, KEventHandler } from "../events/events";
 import type { GfxCtx } from "../gfx/gfx";
 import { TexPacker } from "../gfx/TexPacker";
 import { _k } from "../shared";
-import type { MustKAPLAYOpt } from "../types";
+import type { MustKAPLAYOpt, NativeImageElement } from "../types";
 import type { BitmapFontData } from "./bitmapFont";
 import type { FontData } from "./font";
 import type { ShaderData } from "./shader";
@@ -208,16 +208,17 @@ export function loadJSON(name: string, url: string) {
 }
 
 // wrapper around image loader to get a Promise
-export function loadImg(src: string): Promise<HTMLImageElement> {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = src;
+export function loadImg(src: string): Promise<NativeImageElement> {
+    throw new Error("not implemented");
+    // const img = new Image();
+    // img.crossOrigin = "anonymous";
+    // img.src = src;
 
-    return new Promise<HTMLImageElement>((resolve, reject) => {
-        img.onload = () => resolve(img);
-        img.onerror = () =>
-            reject(new Error(`Failed to load image from "${src}"`));
-    });
+    // return new Promise<HTMLImageElement>((resolve, reject) => {
+    //     img.onload = () => resolve(img);
+    //     img.onerror = () =>
+    //         reject(new Error(`Failed to load image from "${src}"`));
+    // });
 }
 
 export function loadProgress(): number {

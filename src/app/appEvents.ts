@@ -27,8 +27,8 @@ export function initAppEvents() {
             return;
         }
 
-        _k.canvas.width = _k.canvas.offsetWidth * _k.gfx.pixelDensity;
-        _k.canvas.height = _k.canvas.offsetHeight * _k.gfx.pixelDensity;
+        // _k.window.width = _k.canvas.offsetWidth * _k.gfx.pixelDensity;
+        // _k.window.height = _k.canvas.offsetHeight * _k.gfx.pixelDensity;
 
         updateViewport();
 

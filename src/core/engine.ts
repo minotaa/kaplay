@@ -1,5 +1,6 @@
 // The engine is what KAPLAY needs for running and proccesing all it's stuff
 
+import createContext from "@kmamal/gl";
 import { initApp } from "../app/app";
 import { initAssets } from "../assets/asset";
 import { initAudio } from "../audio/audio";
@@ -23,9 +24,9 @@ import { scaleFactory } from "../ecs/components/transform/scale";
 import { zFactory } from "../ecs/components/transform/z";
 import { registerPrefabFactory } from "../ecs/entity/prefab";
 import { createGame } from "../game/game";
-import { createCanvas } from "../gfx/canvas";
 import { initGfx } from "../gfx/gfx";
 import { initAppGfx } from "../gfx/gfxApp";
+import { createWindow } from "../gfx/window";
 import type { KAPLAYOpt } from "../types";
 import type { KAPLAYCtx } from "./contextType";
 import { startEngineLoop } from "./engineLoop";
@@ -56,23 +57,19 @@ export const createEngine = (gopt: KAPLAYOpt) => {
         gopt,
     );
 
-    const canvas = createCanvas(opt);
+    const window = createWindow(opt);
     const { fontCacheC2d, fontCacheCanvas } = createFontCache();
-    const app = initApp({ canvas, ...gopt });
+    const app = initApp({ window, ...gopt });
 
-    // TODO: Probably we should move this to initGfx
-    const canvasContext = app.canvas
-        .getContext("webgl", {
-            antialias: true,
-            depth: true,
-            stencil: true,
-            alpha: true,
-            preserveDrawingBuffer: true,
-        });
-
-    if (!canvasContext) throw new Error("WebGL not supported");
-
-    const gl = canvasContext;
+    const gl = createContext(app.window.width, app.window.height, { 
+        window: app.window.native, 
+        antialias: true, 
+        depth: true, 
+        stencil: true, 
+        alpha: true, 
+        preserveDrawingBuffer: true 
+    });
+    if (!gl) throw new Error("WebGL not supported");
 
     // TODO: Investigate correctly what's the differente between GFX and AppGFX and reduce to 1 method
     const gfx = initGfx(gl, opt);
@@ -126,7 +123,7 @@ export const createEngine = (gopt: KAPLAYOpt) => {
 
     return {
         globalOpt: opt,
-        canvas,
+        window,
         app,
         ggl: gfx,
         gfx: appGfx,

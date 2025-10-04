@@ -1,5 +1,5 @@
 {
-  "name": "kaplay",
+  "name": "kaplay-native",
   "description": "KAPLAY is a JavaScript & TypeScript game library that helps you make games fast and fun!",
   "version": "4000.0.0-alpha.21",
   "license": "MIT",
@@ -16,19 +16,15 @@
     "url": "git+https://github.com/kaplayjs/kaplay.git"
   },
   "type": "module",
-  "main": "./dist/kaplay.cjs",
-  "module": "./dist/kaplay.mjs",
-  "types": "./dist/doc.d.ts",
+  "module": "./src/index.ts",
   "readme": "./README.md",
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/doc.d.ts",
-        "default": "./dist/kaplay.mjs"
+        "default": "./src/index.ts"
       },
       "require": {
-        "types": "./dist/doc.d.ts",
-        "default": "./dist/kaplay.cjs"
+        "default": "./src/index.ts"
       }
     },
     "./global": "./dist/declaration/global.js"
@@ -57,7 +53,8 @@
   "files": [
     "dist/",
     "kaplay.webp",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "src/"
   ],
   "scripts": {
     "dev": "NODE_ENV=development node scripts/dev.js",
@@ -72,7 +69,6 @@
     "doc-dts": "dts-bundle-generator -o dist/doc.d.ts src/index.ts",
     "test:vite": "vitest --typecheck",
     "desktop": "tauri dev",
-    "prepare": "npm run build",
     "publish:next": "npm publish --tag next",
     "help": "makeman help.json"
   },
@@ -104,5 +100,12 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "pnpm@9.9.0+sha512.60c18acd138bff695d339be6ad13f7e936eea6745660d4cc4a776d5247c540d0edee1a563695c183a66eb917ef88f2b4feb1fc25f32a7adcadc7aaf3438e99c1"
+  "dependencies": {
+    "@kmamal/gl": "^9.1.0",
+    "@kmamal/sdl": "^0.11.13"
+  },
+  "trustedDependencies": [
+    "@kmamal/gl",
+    "@kmamal/sdl"
+  ]
 }
