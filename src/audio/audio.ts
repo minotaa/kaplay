@@ -1,29 +1,34 @@
+import sdl, { Sdl } from '@kmamal/sdl';
+
 /** @ignore */
 export interface InternalAudioCtx {
-    ctx: AudioContext;
-    masterNode: GainNode;
+    device: Sdl.Audio.AudioPlaybackInstance;
+    masterVolume: number;
 }
 
 /** @ignore */
-export function createEmptyAudioBuffer(ctx: AudioContext) {
-    return ctx.createBuffer(1, 1, 44100);
+export function createEmptyAudioBuffer() {
+    return {
+        sampleRate: 44100,
+        length: 1,
+        duration: 1 / 44100,
+        numberOfChannels: 1,
+        getChannelData: (channel: number) => new Float32Array(1),
+        copyFromChannel: () => {},
+        copyToChannel: () => {},
+    } as AudioBuffer;
 }
 
 /** @ignore */
 export const initAudio = (): InternalAudioCtx => {
-    const audio = (() => {
-        const ctx = new (
-            window.AudioContext || (window as any).webkitAudioContext
-        )() as AudioContext;
+    const device = sdl.audio.openDevice({
+        type: 'playback',
+    });
 
-        const masterNode = ctx.createGain();
-        masterNode.connect(ctx.destination);
+    device.play();
 
-        return {
-            ctx,
-            masterNode,
-        };
-    })();
-
-    return audio;
+    return {
+        device,
+        masterVolume: 1.0,
+    };
 };

@@ -1,3 +1,4 @@
+import sharp from "sharp";
 import type { TextureOpt } from "../types";
 import { type GfxCtx, Texture } from "./gfx";
 
@@ -84,16 +85,17 @@ export class FrameBuffer {
         return new ImageData(data, this.width, this.height);
     }
 
-    toDataURL() {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = this.width;
-        canvas.height = this.height;
-
-        if (!ctx) throw new Error("Failed to get 2d context");
-
-        ctx.putImageData(this.toImageData(), 0, 0);
-        return canvas.toDataURL();
+    async toDataURL(): Promise<string> {
+        const pngBuffer = await sharp(Buffer.from(this.toImageData().data), {
+            raw: {
+                width: this.width,
+                height: this.height,
+                channels: 4, // RGBA
+            }
+        }).png().toBuffer();
+        
+        const base64 = pngBuffer.toString('base64');
+        return `data:image/png;base64,${base64}`;
     }
 
     clear() {

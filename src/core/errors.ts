@@ -16,7 +16,7 @@ export const throwError = (err: string) => {
 export const handleErr = (err: unknown) => {
     if (_k.game.crashed) return;
     _k.game.crashed = true;
-    _k.audio.ctx.suspend();
+    _k.audio.device.pause();
     let error: Error;
 
     if (err instanceof Error) {

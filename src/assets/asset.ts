@@ -11,6 +11,9 @@ import type { ShaderData } from "./shader";
 import type { SoundData } from "./sound";
 import type { SpriteData } from "./sprite";
 import { fixURL } from "./utils";
+import sdl from '@kmamal/sdl';
+import fs from 'fs';
+import sharp from "sharp";
 
 /**
  * An asset is a resource that is loaded asynchronously.
@@ -208,17 +211,36 @@ export function loadJSON(name: string, url: string) {
 }
 
 // wrapper around image loader to get a Promise
-export function loadImg(src: string): Promise<NativeImageElement> {
-    throw new Error("not implemented");
-    // const img = new Image();
-    // img.crossOrigin = "anonymous";
-    // img.src = src;
-
-    // return new Promise<HTMLImageElement>((resolve, reject) => {
-    //     img.onload = () => resolve(img);
-    //     img.onerror = () =>
-    //         reject(new Error(`Failed to load image from "${src}"`));
-    // });
+export async function loadImg(src: string): Promise<NativeImageElement> {
+    try {
+        let imageBuffer: Buffer;
+        
+        // Handle data URLs
+        if (src.startsWith('data:')) {
+            const base64Data = src.split(',')[1];
+            imageBuffer = Buffer.from(base64Data, 'base64');
+        } else {
+            // Handle file paths
+            const filePath = src.replace(/^file:\/\//, '');
+            imageBuffer = fs.readFileSync(filePath);
+        }
+        
+        // Decode image
+        const img = sharp(imageBuffer);
+        const metadata = await img.metadata();
+        const { data, info } = await img
+            .ensureAlpha() // Ensure RGBA format
+            .raw()
+            .toBuffer({ resolveWithObject: true });
+        
+        return {
+            width: info.width,
+            height: info.height,
+            data: new Uint8Array(data),
+        } as NativeImageElement;
+    } catch (error) {
+        throw new Error(`Failed to load image from "${src}": ${error}`);
+    }
 }
 
 export function loadProgress(): number {

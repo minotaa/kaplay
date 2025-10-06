@@ -10,13 +10,13 @@ import { toFixed } from "../utils/numbers";
 export function initAppEvents() {
     _k.app.onHide(() => {
         if (!_k.globalOpt.backgroundAudio) {
-            _k.audio.ctx.suspend();
+            _k.audio.device.pause();
         }
     });
 
     _k.app.onShow(() => {
         if (!_k.globalOpt.backgroundAudio && !_k.debug.paused) {
-            _k.audio.ctx.resume();
+            _k.audio.device.play();
         }
     });
 

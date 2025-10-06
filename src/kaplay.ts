@@ -25,6 +25,7 @@ import {
     type MergePlugins,
     type PluginList,
 } from "./types";
+import decode from "audio-decode";
 
 // If KAPLAY was runned before
 let runned = false;
@@ -118,11 +119,11 @@ export const kaplay = <
     game.defaultAssets.ka = loadSprite(null, kaSpriteSrc);
     game.defaultAssets.boom = loadSprite(null, boomSpriteSrc);
 
-    // by default browsers can only load audio async, we don't deal with that and just start with an empty audio buffer
-    const burpSnd = new SoundData(createEmptyAudioBuffer(audio.ctx));
+    // Create empty sound as placeholder
+    const burpSnd = new SoundData(createEmptyAudioBuffer());
 
-    // load that burp sound
-    audio.ctx.decodeAudioData(burpSoundSrc.buffer.slice(0) as ArrayBuffer).then(
+    // Load and decode that burp sound
+    decode(burpSoundSrc.buffer.slice(0) as ArrayBuffer).then(
         (buf) => {
             burpSnd.buf = buf;
             game.defaultAssets.burp = burpSnd;

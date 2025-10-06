@@ -508,7 +508,7 @@ export const createContext = (
         getVolume: getVolume,
         volume,
         burp,
-        audioCtx: audio.ctx,
+        audioDevice: audio.device,
         // math
         Line,
         Rect,

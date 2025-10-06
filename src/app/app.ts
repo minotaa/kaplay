@@ -318,7 +318,7 @@ export const initApp = (
             if (state.stopped) return;
 
             // TODO: allow background actions?
-            if (document.visibilityState !== "visible") {
+            if (_k.app.isHidden()) {
                 state.loopID = requestAnimationFrame(frame);
                 return;
             }
@@ -1213,18 +1213,18 @@ export const initApp = (
 
     canvasEvents.contextmenu = (e) => e.preventDefault();
 
-    docEvents.visibilitychange = () => {
-        if (document.visibilityState === "visible") {
-            // prevent a surge of dt when switch back after the tab being hidden for a while
-            state.skipTime = true;
-            state.isHidden = false;
-            state.events.trigger("show");
-        }
-        else {
-            state.isHidden = true;
-            state.events.trigger("hide");
-        }
-    };
+    // Handle window focus/blur events from SDL
+    _k.gfx.canvas.on('focus', () => {
+        // prevent a surge of dt when switch back after the window being hidden for a while
+        state.skipTime = true;
+        state.isHidden = false;
+        state.events.trigger("show");
+    });
+
+    _k.gfx.canvas.on('blur', () => {
+        state.isHidden = true;
+        state.events.trigger("hide");
+    });
 
     winEvents.gamepadconnected = (e) => {
         const kbGamepad = registerGamepad(e.gamepad);

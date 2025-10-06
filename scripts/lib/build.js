@@ -38,6 +38,7 @@ const kaboomBuild = fmts("kaboom")[0];
 export const config = {
     bundle: true,
     minify: true,
+    platform: 'node',
     keepNames: false,
     // MORE MINIFICATION
     minifyIdentifiers: true,
@@ -55,7 +56,8 @@ export const config = {
     external: [
         "@napi-rs/canvas",
         "@kmamal/gl",
-        "@kmamal/sdl"
+        "@kmamal/sdl",
+        "sharp"
     ]
 };
 
@@ -65,6 +67,7 @@ export async function build(fast = false) {
         return esbuild.build({
             ...config,
             ...kaplayBuilds[0],
+            platform: 'node',
             bundle: true,
             minify: false,
             sourcemap: false,

@@ -79,11 +79,10 @@ export class Texture {
         img: ImageSource,
         opt: TextureOpt = {},
     ): Texture {
-        throw new Error("not implemented");
-        // const tex = new Texture(ctx, img.width, img.height, opt);
-        // tex.update(img);
-        // tex.src = img;
-        // return tex;
+        const tex = new Texture(ctx, img.width, img.height, opt);
+        tex.update(img);
+        tex.src = img;
+        return tex;
     }
 
     update(img: ImageSource, x = 0, y = 0) {
@@ -515,32 +514,27 @@ export function initGfx(gl: WebGLRenderingContext, opts: KAPLAYOpt = {}) {
     }
 
     const [pushTexture2D, popTexture2D] = genStack<WebGLTexture>((t) => {
-        if (!t) throw new Error("Cannot bind null texture");
-        gl.bindTexture(gl.TEXTURE_2D, t)
+        if (t) gl.bindTexture(gl.TEXTURE_2D, t)
     });
 
     const [pushArrayBuffer, popArrayBuffer] = genStack<WebGLBuffer>((b) => {
-        if (!b) throw new Error("Cannot bind null array buffer");
-        gl.bindBuffer(gl.ARRAY_BUFFER, b)
+        if (b) gl.bindBuffer(gl.ARRAY_BUFFER, b)
     });
 
     const [pushElementArrayBuffer, popElementArrayBuffer] = genStack<
         WebGLBuffer
     >((b) => {
-        if (!b) throw new Error("Cannot bind null element array buffer");
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b)
+        if (b) gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b)
     });
 
     const [pushFramebuffer, popFramebuffer] = genStack<WebGLFramebuffer>((b) => {
-        if (!b) throw new Error("Cannot bind null framebuffer");
-        gl.bindFramebuffer(gl.FRAMEBUFFER, b)
+        if (b) gl.bindFramebuffer(gl.FRAMEBUFFER, b)
     });
 
     const [pushRenderbuffer, popRenderbuffer] = genStack<WebGLRenderbuffer>((
         b,
     ) => {
-        if (!b) throw new Error("Cannot bind null renderbuffer"); 
-        gl.bindRenderbuffer(gl.RENDERBUFFER, b)
+        if (b) gl.bindRenderbuffer(gl.RENDERBUFFER, b)
     });
 
     const [pushViewport, popViewport] = genStack<
@@ -553,8 +547,7 @@ export function initGfx(gl: WebGLRenderingContext, opts: KAPLAYOpt = {}) {
     });
 
     const [pushProgram, popProgram] = genStack<WebGLProgram>((p) => {
-        if (!p) throw new Error("Cannot bind null program");
-        gl.useProgram(p)
+        if (p) gl.useProgram(p)
     });
 
     pushViewport({

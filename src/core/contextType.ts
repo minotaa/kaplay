@@ -4648,12 +4648,12 @@ export interface KAPLAYCtx {
      */
     volume(v?: number): number;
     /**
-     * Get the underlying browser AudioContext.
+     * Get the underlying SDL audio device.
      *
      * @since v2000.0
      * @group Audio
      */
-    audioCtx: AudioContext;
+    audioDevice: Sdl.Audio.AudioPlaybackInstance;
     /**
      * Get a random value between the given bound.
      *

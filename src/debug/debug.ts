@@ -120,10 +120,10 @@ export const createDebug = (
         set paused(v) {
             debugPaused = v;
             if (v) {
-                audio.ctx.suspend();
+                audio.device.pause();
             }
             else {
-                audio.ctx.resume();
+                audio.device.play();
             }
         },
     } satisfies Debug;

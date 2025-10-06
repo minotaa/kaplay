@@ -2,6 +2,7 @@ import { _k } from "../shared";
 import { dataURLToArrayBuffer, isDataURL } from "../utils/dataURL";
 import { Asset, fetchArrayBuffer, loadProgress } from "./asset";
 import { fixURL } from "./utils";
+import decode from 'audio-decode';
 
 export class SoundData {
     buf: AudioBuffer;
@@ -14,10 +15,10 @@ export class SoundData {
         return new SoundData(buf);
     }
 
-    static fromArrayBuffer(buf: ArrayBuffer): Promise<SoundData> {
-        return new Promise((resolve, reject) =>
-            _k.audio.ctx.decodeAudioData(buf, resolve, reject)
-        ).then((buf) => new SoundData(buf as AudioBuffer));
+    static async fromArrayBuffer(buf: ArrayBuffer): Promise<SoundData> {
+        // Use audio-decode instead of Web Audio API
+        const decoded = await decode(buf);
+        return new SoundData(decoded);
     }
 
     static fromURL(url: string): Promise<SoundData> {

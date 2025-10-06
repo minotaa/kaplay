@@ -4,6 +4,9 @@ import { KEvent, type KEventController } from "../events/events";
 import { _k } from "../shared";
 import type { MusicData } from "../types";
 import { playMusic } from "./playMusic";
+import sdl from "@kmamal/sdl";
+import decode from "audio-decode";
+import fs from "fs";
 
 // TODO: enable setting on load, make part of SoundData
 /**
@@ -150,45 +153,127 @@ export function play(
         | Asset<MusicData>,
     opt: AudioPlayOpt = {},
 ): AudioPlay {
+    
     if (typeof src === "string" && _k.assets.music[src]) {
         return playMusic(_k.assets.music[src], opt);
     }
 
-    const ctx = _k.audio.ctx;
+    const device = _k.audio.device;
     let paused = opt.paused ?? false;
-    let srcNode = ctx.createBufferSource();
+    let volume = opt.volume ?? 1;
+    let pan = opt.pan ?? 0;
+    let speed = opt.speed ?? 1;
+    let detune = opt.detune ?? 0;
+    let loop = Boolean(opt.loop);
+    let seekPos = opt.seek ?? 0;
+    
     const onEndEvents = new KEvent();
-    const gainNode = ctx.createGain();
-    const panNode = ctx.createStereoPanner();
-    const pos = opt.seek ?? 0;
+    
+    let audioBuffer: Float32Array | null = null;
+    let sampleRate = 44100;
+    let channels = 1;
+    let playbackPosition = 0;
     let startTime = 0;
-    let stopTime = 0;
-    let started = false;
-
-    srcNode.loop = Boolean(opt.loop);
-    srcNode.detune.value = opt.detune ?? 0;
-    srcNode.playbackRate.value = opt.speed ?? 1;
-    srcNode.connect(panNode);
-    srcNode.onended = () => {
-        if (
-            getTime()
-                >= (srcNode.buffer?.duration ?? Number.POSITIVE_INFINITY)
-        ) {
-            onEndEvents.trigger();
-        }
-    };
-    panNode.pan.value = opt.pan ?? 0;
-    panNode.connect(gainNode);
-    gainNode.connect(opt.connectTo ?? _k.audio.masterNode);
-    gainNode.gain.value = opt.volume ?? 1;
+    let pauseTime = 0;
+    let isPlaying = false;
+    let playbackId: NodeJS.Timeout | null = null;
 
     const start = (data: SoundData) => {
-        srcNode.buffer = data.buf;
-        if (!paused) {
-            startTime = ctx.currentTime;
-            srcNode.start(0, pos);
-            started = true;
+        // data.buf is always an AudioBuffer
+        sampleRate = data.buf.sampleRate;
+        channels = data.buf.numberOfChannels;
+        const frameCount = data.buf.length;
+        
+        // Interleave channels into single Float32Array
+        audioBuffer = new Float32Array(frameCount * channels);
+        
+        for (let frame = 0; frame < frameCount; frame++) {
+            for (let channel = 0; channel < channels; channel++) {
+                const channelData = data.buf.getChannelData(channel);
+                audioBuffer[frame * channels + channel] = channelData[frame];
+            }
         }
+        
+        if (!paused) {
+            startPlayback();
+        }
+    };
+
+    const startPlayback = () => {
+        if (!audioBuffer || isPlaying) return;
+        
+        isPlaying = true;
+        startTime = Date.now();
+        playbackPosition = seekPos * sampleRate;
+        
+        // Schedule audio chunks
+        scheduleNextChunk();
+    };
+
+    const scheduleNextChunk = () => {
+        if (!audioBuffer || !isPlaying) return;
+        
+        // Get device parameters
+        const deviceChannels = device.channels;
+        const deviceFrequency = device.frequency;
+        
+        const chunkSize = 2048 * deviceChannels;
+        const chunk = new Float32Array(chunkSize);
+        
+        for (let i = 0; i < chunkSize; i += deviceChannels) {
+            const pos = Math.floor(playbackPosition);
+            const sourceIndex = pos * channels;
+            
+            if (sourceIndex >= audioBuffer.length) {
+                if (loop) {
+                    playbackPosition = 0;
+                } else {
+                    isPlaying = false;
+                    onEndEvents.trigger();
+                    // Fill rest with silence
+                    for (let j = i; j < chunkSize; j++) {
+                        chunk[j] = 0;
+                    }
+                    break;
+                }
+                continue;
+            }
+            
+            // Get sample from source (mono or stereo)
+            const leftSample = audioBuffer[sourceIndex] || 0;
+            const rightSample = channels > 1 ? (audioBuffer[sourceIndex + 1] || 0) : leftSample;
+            
+            // Apply volume and pan for stereo output
+            if (deviceChannels === 2) {
+                const leftGain = volume * (1 - Math.max(0, pan));
+                const rightGain = volume * (1 + Math.min(0, pan));
+                
+                chunk[i] = leftSample * leftGain * _k.audio.masterVolume;
+                chunk[i + 1] = rightSample * rightGain * _k.audio.masterVolume;
+            } else {
+                // Mono output - mix down
+                chunk[i] = ((leftSample + rightSample) / 2) * volume * _k.audio.masterVolume;
+            }
+            
+            playbackPosition += speed;
+        }
+        
+        // Convert Float32Array to Buffer for SDL
+        const buffer = Buffer.from(chunk.buffer);
+        device.enqueue(buffer);
+        
+        // Schedule next chunk based on buffer time
+        const chunkDuration = (chunkSize / deviceChannels / deviceFrequency) * 1000;
+        playbackId = setTimeout(scheduleNextChunk, chunkDuration * 0.5);
+    };
+
+    const stopPlayback = () => {
+        if (playbackId) {
+            clearTimeout(playbackId);
+            playbackId = null;
+        }
+        isPlaying = false;
+        device.clearQueue();
     };
 
     const snd = resolveSound(
@@ -198,26 +283,17 @@ export function play(
 
     if (snd instanceof Asset) {
         snd.onLoad(start);
+    } else if (snd) {
+        start(snd);
     }
 
     const getTime = () => {
-        if (!srcNode.buffer) return 0;
+        if (!audioBuffer) return 0;
         const t = paused
-            ? stopTime - startTime
-            : ctx.currentTime - startTime;
-        const d = srcNode.buffer.duration;
-        return srcNode.loop ? t % d : Math.min(t, d);
-    };
-
-    const cloneNode = (oldNode: AudioBufferSourceNode) => {
-        const newNode = ctx.createBufferSource();
-        newNode.buffer = oldNode.buffer;
-        newNode.loop = oldNode.loop;
-        newNode.playbackRate.value = oldNode.playbackRate.value;
-        newNode.detune.value = oldNode.detune.value;
-        newNode.onended = oldNode.onended;
-        newNode.connect(panNode);
-        return newNode;
+            ? pauseTime - startTime
+            : Date.now() - startTime;
+        const d = (audioBuffer.length / channels / sampleRate) * 1000;
+        return loop ? (t % d) / 1000 : Math.min(t / 1000, d / 1000);
     };
 
     return {
@@ -230,19 +306,12 @@ export function play(
             if (paused === p) return;
             paused = p;
             if (p) {
-                if (started) {
-                    srcNode.stop();
-                    started = false;
-                }
-                stopTime = ctx.currentTime;
-            }
-            else {
-                srcNode = cloneNode(srcNode);
-                const pos = stopTime - startTime;
-                srcNode.start(0, pos);
-                started = true;
-                startTime = ctx.currentTime - pos;
-                stopTime = 0;
+                stopPlayback();
+                pauseTime = Date.now();
+            } else {
+                const elapsed = pauseTime - startTime;
+                startTime = Date.now() - elapsed;
+                startPlayback();
             }
         },
 
@@ -256,69 +325,67 @@ export function play(
         },
 
         seek(time: number) {
-            if (!srcNode.buffer?.duration) return;
-            if (time > srcNode.buffer.duration) return;
-            if (paused) {
-                srcNode = cloneNode(srcNode);
-                startTime = stopTime - time;
-            }
-            else {
-                srcNode.stop();
-                srcNode = cloneNode(srcNode);
-                startTime = ctx.currentTime - time;
-                srcNode.start(0, time);
-                started = true;
-                stopTime = 0;
+            if (!audioBuffer) return;
+            const duration = audioBuffer.length / channels / sampleRate;
+            if (time > duration) return;
+            
+            seekPos = time;
+            playbackPosition = time * sampleRate;
+            
+            if (!paused) {
+                stopPlayback();
+                startTime = Date.now();
+                startPlayback();
             }
         },
 
-        // TODO: affect time()
         set speed(val: number) {
-            srcNode.playbackRate.value = val;
+            speed = val;
         },
 
         get speed() {
-            return srcNode.playbackRate.value;
+            return speed;
         },
 
         set detune(val: number) {
-            srcNode.detune.value = val;
+            detune = val;
+            speed = Math.pow(2, detune / 1200);
         },
 
         get detune() {
-            return srcNode.detune.value;
+            return detune;
         },
 
         set volume(val: number) {
-            gainNode.gain.value = Math.max(val, 0);
+            volume = Math.max(val, 0);
         },
 
         get volume() {
-            return gainNode.gain.value;
+            return volume;
         },
 
-        set pan(pan: number) {
-            panNode.pan.value = pan;
+        set pan(p: number) {
+            pan = Math.max(-1, Math.min(1, p));
         },
 
         get pan() {
-            return panNode.pan.value;
+            return pan;
         },
 
         set loop(l: boolean) {
-            srcNode.loop = l;
+            loop = l;
         },
 
         get loop() {
-            return srcNode.loop;
+            return loop;
         },
 
         duration(): number {
-            return srcNode.buffer?.duration ?? 0;
+            return audioBuffer ? audioBuffer.length / channels / sampleRate : 0;
         },
 
         time(): number {
-            return getTime() % this.duration();
+            return getTime();
         },
 
         onEnd(action: () => void) {
@@ -330,8 +397,7 @@ export function play(
         },
 
         connect(node?: AudioNode) {
-            gainNode.disconnect();
-            gainNode.connect(node ?? _k.audio.masterNode);
+            console.warn('connect() not supported with SDL audio');
         },
     };
 }
