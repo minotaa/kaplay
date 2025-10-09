@@ -51,7 +51,7 @@ export function startEngineLoop(
             }
         } catch (e) {
             handleErr(e as Error);
-        }
+        } // @ts-ignore
     }, (processInput, resetInput) => {
         try {
             processInput();

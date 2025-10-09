@@ -12,7 +12,7 @@ export function raycast(
 
     const shapes = _k.game.root.get("area");
 
-    shapes.forEach(s => {
+    shapes.forEach((s: any) => {
         if (exclude && exclude.some(tag => s.is(tag))) return;
         const shape = s.worldArea();
         const hit = shape.raycast(origin, direction);

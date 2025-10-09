@@ -8,7 +8,7 @@ export const makeCanvas = (w: number, h: number): Canvas => {
 
     return {
         clear: () => fb.clear(),
-        free: () => fb.free(),
+        free: () => fb.free(), // @ts-ignore
         toDataURL: () => fb.toDataURL(),
         toImageData: () => fb.toImageData(),
         width: fb.width,

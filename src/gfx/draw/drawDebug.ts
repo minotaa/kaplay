@@ -53,7 +53,7 @@ export function drawDebug() {
                 }
             }
 
-            lines.push(...inspecting.tags.map(t => `tag: ${t}`));
+            lines.push(...inspecting.tags.map((t: any) => `tag: ${t}`));
 
             drawInspectText(
                 viewportToCanvas(_k.app.mousePos()),
@@ -193,7 +193,7 @@ export function drawDebug() {
             }
 
             _k.game.logs = _k.game.logs
-                .filter((log) =>
+                .filter((log: any) =>
                     _k.app.time() - log.time
                         < (_k.globalOpt.logTime || LOG_TIME)
                 );

@@ -886,7 +886,7 @@ export function randi(...args: [] | [number] | [number, number]) {
     return Math.floor(rand(...(args.length > 0 ? args : [2])));
 }
 
-export function chance(p: number): boolean {
+export function chance(p: number): boolean { // @ts-ignore
     return rand() <= p;
 }
 

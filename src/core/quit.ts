@@ -7,7 +7,7 @@ export const quit = () => {
 
         // run all scattered gc events
         ggl.destroy();
-        gc.forEach((f) => f());
+        gc.forEach((f: any) => f());
 
         // remove canvas
         app.window.destroy();

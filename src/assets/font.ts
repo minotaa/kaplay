@@ -13,6 +13,7 @@ import type { LoadFontOpt, Outline, TexFilter } from "../types";
 import { Asset, loadProgress } from "./asset";
 import { type BitmapFontData, getBitmapFont, type GfxFont } from "./bitmapFont";
 
+
 /**
  * @group Assets
  * @subgroup Data
@@ -49,6 +50,22 @@ export class FontData {
     }
 }
 
+// At the top of the file or in a fonts module
+const systemFonts = new Set<string>([
+    'Arial',
+    'Helvetica',
+    'Times New Roman',
+    'Courier',
+    'Courier New',
+    'Verdana',
+    'Georgia',
+    'Palatino',
+    'Garamond',
+    'Comic Sans MS',
+    'Trebuchet MS',
+    'Impact',
+]);
+
 export function resolveFont(
     src: DrawTextOpt["font"],
 ):
@@ -72,9 +89,7 @@ export function resolveFont(
         else if (font) {
             return font.data ?? font;
         }
-        else if (
-            document.fonts.check(`${DEF_TEXT_CACHE_SIZE}px ${src}`)
-        ) {
+        else if (systemFonts.has(src)) {
             return src;
         }
         else if (loadProgress() < 1) {

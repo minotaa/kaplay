@@ -69,7 +69,7 @@ export function textInput(
             (this as any as GameObj).trigger(hasFocus ? "focus" : "blur");
             if (hasFocus) {
                 origText = this.typedText;
-                _k.game.allTextInputs.forEach(i => {
+                _k.game.allTextInputs.forEach((i: any) => {
                     // @ts-ignore
                     if (i !== this) {
                         i.hasFocus = false;
@@ -89,7 +89,7 @@ export function textInput(
                 this.trigger("input");
             };
 
-            charEv = _k.app.onCharInput((character) => {
+            charEv = _k.app.onCharInput((character: any) => {
                 if (
                     this.hasFocus
                     && (!maxInputLength

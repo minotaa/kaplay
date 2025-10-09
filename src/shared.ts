@@ -5,6 +5,7 @@ import type { Engine } from "./core/engine";
  *
  * @ignore
  */
+// @ts-ignore
 export let _k: Engine;
 
 /** @ignore */

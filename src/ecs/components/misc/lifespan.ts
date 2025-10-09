@@ -33,7 +33,7 @@ export function lifespan(time: number, opt: LifespanCompOpt = {}): EmptyComp {
                         this.opacity,
                         0,
                         fade,
-                        (a) => this.opacity = a,
+                        (a: any) => this.opacity = a,
                         easings.linear,
                     ).onEnd(() => {
                         this.destroy();

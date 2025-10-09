@@ -115,6 +115,7 @@ export const initAppGfx = (gfx: GfxCtx, gopt: MustKAPLAYOpt): AppGfxCtx => {
     }
 
     gl.enable(gl.BLEND);
+    gl.clearColor(0, 0, 0, 0);
     gl.blendFuncSeparate(
         gl.ONE,
         gl.ONE_MINUS_SRC_ALPHA,

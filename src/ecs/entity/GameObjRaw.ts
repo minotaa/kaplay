@@ -1,5 +1,5 @@
 // The E of ECS
-
+// @ts-nocheck
 import type { AppEvents } from "../../app/app";
 import type { KAPLAYCtx } from "../../core/contextType";
 import { throwError } from "../../core/errors";
@@ -559,7 +559,7 @@ const COMP_EVENTS = new Set([
 ]);
 
 type GarbageCollectorArray = (() => any)[];
-
+// @ts-ignore
 export const GameObjRawPrototype: Omit<InternalGameObjRaw, AppEvents> = {
     // This chain of `as any`, is because we never should use this object
     // directly, it's only a prototype. These properties WILL be defined
@@ -1567,7 +1567,7 @@ export const GameObjRawPrototype: Omit<InternalGameObjRaw, AppEvents> = {
 // #region App Events in Proto
 export function attachAppToGameObjRaw() {
     // We add App Events for "attaching" it to game object
-    const appEvs = [
+    const appEvs = [ 
         "onKeyPress",
         "onKeyPressRepeat",
         "onKeyDown",

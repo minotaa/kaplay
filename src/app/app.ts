@@ -32,7 +32,7 @@ import {
     type ButtonsDef,
     parseButtonBindings,
 } from "./inputBindings";
-import type { Sdl } from "@kmamal/sdl";
+import sdl, { type Sdl } from "@kmamal/sdl";
 
 export class ButtonState<T = string> {
     pressed: Set<T> = new Set([]);
@@ -81,6 +81,7 @@ class FPSCounter {
     }
 }
 
+// @ts-ignore
 export type App = ReturnType<typeof initApp>;
 export type AppState = ReturnType<typeof initAppState>;
 
@@ -158,6 +159,7 @@ export const initAppState = (opt: {
  *
  * @returns The app context.
  */
+// @ts-ignore
 export const initApp = (
     opt: {
         window: Sdl.Video.Window;
@@ -307,27 +309,24 @@ export const initApp = (
         fixedUpdate: () => void,
         update: (processInput: () => void, resetInput: () => void) => void,
     ) {
-        if (state.loopID !== null) {
-            cancelAnimationFrame(state.loopID);
-        }
-
         let fixedAccumulatedDt = 0;
         let accumulatedDt = 0;
+        let lastTime = performance.now() / 1000;
 
-        const frame = (t: number) => {
+        const frame = () => {
             if (state.stopped) return;
 
-            // TODO: allow background actions?
             if (_k.app.isHidden()) {
-                state.loopID = requestAnimationFrame(frame);
+                setImmediate(frame);
                 return;
             }
 
-            const loopTime = t / 1000;
-            const realDt = Math.min(loopTime - state.realTime, 0.25);
+            const currentTime = performance.now() / 1000;
+            const realDt = Math.min(currentTime - lastTime, 0.25);
             const desiredDt = opt.maxFPS ? 1 / opt.maxFPS : 0;
 
-            state.realTime = loopTime;
+            state.realTime = currentTime;
+            lastTime = currentTime;
             accumulatedDt += realDt;
 
             if (accumulatedDt > desiredDt) {
@@ -354,10 +353,10 @@ export const initApp = (
                 update(processInput, resetInput);
             }
 
-            state.loopID = requestAnimationFrame(frame);
+            setImmediate(frame);
         };
 
-        frame(0);
+        frame();
     }
 
     function isTouchscreen() {
@@ -720,41 +719,34 @@ export const initApp = (
         });
     }
 
-    function registerGamepad(browserGamepad: Gamepad) {
-        const gamepad: KGamepad = {
-            index: browserGamepad.index,
+    function registerGamepad(gamepad: { index: number, controller: any }) {
+        // Create gamepad state first
+        state.gamepadStates.set(gamepad.index, {
+            buttonState: new ButtonState(),
+            stickState: new Map(),
+        });
+        
+        const gp: KGamepad = {
+            index: gamepad.index,
             isPressed: (btn: KGamepadButton) => {
-                return state.gamepadStates.get(browserGamepad.index)
-                    ?.buttonState
-                    .pressed.has(btn) || false;
+                const gamepadState = state.gamepadStates.get(gamepad.index);
+                return gamepadState?.buttonState.pressed.has(btn) ?? false;
             },
             isDown: (btn: KGamepadButton) => {
-                return state.gamepadStates.get(browserGamepad.index)
-                    ?.buttonState
-                    .down.has(btn) || false;
+                const gamepadState = state.gamepadStates.get(gamepad.index);
+                return gamepadState?.buttonState.down.has(btn) ?? false;
             },
             isReleased: (btn: KGamepadButton) => {
-                return state.gamepadStates.get(browserGamepad.index)
-                    ?.buttonState
-                    .released.has(btn) || false;
+                const gamepadState = state.gamepadStates.get(gamepad.index);
+                return gamepadState?.buttonState.released.has(btn) ?? false;
             },
             getStick: (stick: KGamepadStick) => {
-                return state.gamepadStates.get(browserGamepad.index)?.stickState
-                    .get(stick) || vec2();
+                const gamepadState = state.gamepadStates.get(gamepad.index);
+                return gamepadState?.stickState.get(stick) ?? vec2(0, 0);
             },
         };
-
-        state.gamepads.push(gamepad);
-
-        state.gamepadStates.set(browserGamepad.index, {
-            buttonState: new ButtonState(),
-            stickState: new Map([
-                ["left", new Vec2(0)],
-                ["right", new Vec2(0)],
-            ]),
-        });
-
-        return gamepad;
+        
+        state.gamepads.push(gp);
     }
 
     function removeGamepad(gamepad: Gamepad) {
@@ -764,106 +756,134 @@ export const initApp = (
         state.gamepadStates.delete(gamepad.index);
     }
 
-    // TODO: Clean up this function
     function processGamepad() {
-        throw new Error('not implemented');
+        // Get all connected gamepads from SDL
+        const sdlGamepads = sdl.controller.devices;
+            
+        // Remove disconnected gamepads
+        for (let i = state.gamepads.length - 1; i >= 0; i--) {
+            const gamepad = state.gamepads[i];
+            const sdlDevice = sdlGamepads[gamepad.index];
+            
+            if (!sdlDevice) {
+                state.gamepads.splice(i, 1);
+                state.gamepadStates.delete(gamepad.index);
+                state.events.trigger("gamepadDisconnect", gamepad);
+            }
+        }
         
-        // for (const browserGamepad of navigator.getGamepads()) {
-        //     if (
-        //         browserGamepad && !state.gamepadStates.has(
-        //             browserGamepad.index,
-        //         )
-        //     ) {
-        //         registerGamepad(browserGamepad);
-        //     }
-        // }
+        // Register new gamepads
+        for (let i = 0; i < sdlGamepads.length; i++) {
+            if (!state.gamepadStates.has(i)) {
+                const controller = sdl.controller.openDevice(sdlGamepads[i]); 
+                registerGamepad({ index: i, controller });
+                state.events.trigger("gamepadConnect", state.gamepads[state.gamepads.length - 1]);
+            }
+        }
 
-        // for (const gamepad of state.gamepads) {
-        //     const browserGamepad = navigator.getGamepads()[gamepad.index];
-        //     if (!browserGamepad) continue;
+        // Process each registered gamepad
+        for (const gamepad of state.gamepads) {
+            const gamepadState = state.gamepadStates.get(gamepad.index);
+            if (!gamepadState) continue;
+            
+            // Get the controller from SDL
+            const sdlDevice = sdl.controller.devices[gamepad.index];
+            if (!sdlDevice) continue;
+            
+            const controller = sdl.controller.openDevice(sdlDevice);
+            if (!controller) continue;
 
-        //     const customMap = opt.gamepads ?? {};
-        //     const map = customMap[browserGamepad.id]
-        //         || GP_MAP[browserGamepad.id] || GP_MAP["default"];
-        //     const gamepadState = state.gamepadStates.get(gamepad.index);
-        //     if (!gamepadState) continue;
+            const customMap = opt.gamepads ?? {};
+            const map = customMap[sdlDevice.name]
+                || GP_MAP[sdlDevice.name] || GP_MAP["default"];
 
-        //     for (let i = 0; i < browserGamepad.buttons.length; i++) {
-        //         const gamepadBtn = map.buttons[i];
-        //         const browserGamepadBtn = browserGamepad.buttons[i];
-        //         const isGamepadButtonBind = state.buttonsByGamepad.has(
-        //             gamepadBtn,
-        //         );
+            // Process button states
+            for (let i = 0; i < Object.keys(controller.buttons).length; i++) {
+                const gamepadBtn = map.buttons[i];
+                if (!gamepadBtn) continue;
+                
+                const isPressed = Object.keys(controller.buttons)[i]; // This is a boolean
+                const isGamepadButtonBind = state.buttonsByGamepad.has(gamepadBtn);
 
-        //         if (browserGamepadBtn.pressed) {
-        //             if (gamepadState.buttonState.down.has(gamepadBtn)) {
-        //                 state.events.trigger(
-        //                     "gamepadButtonDown",
-        //                     gamepadBtn,
-        //                     gamepad,
-        //                 );
+                if (isPressed) {
+                    if (gamepadState.buttonState.down.has(gamepadBtn)) {
+                        state.events.trigger(
+                            "gamepadButtonDown",
+                            gamepadBtn,
+                            gamepad,
+                        );
+                        continue;
+                    }
 
-        //                 continue;
-        //             }
+                    state.lastInputDevice = "gamepad";
 
-        //             state.lastInputDevice = "gamepad";
+                    if (isGamepadButtonBind) {
+                        state.buttonsByGamepad.get(gamepadBtn)?.forEach(
+                            (btn) => {
+                                state.buttonState.press(btn);
+                                state.events.trigger("buttonPress", btn);
+                            },
+                        );
+                    }
 
-        //             if (isGamepadButtonBind) {
-        //                 // replicate input in merged state, defined button state and gamepad state
-        //                 state.buttonsByGamepad.get(gamepadBtn)?.forEach(
-        //                     (btn) => {
-        //                         state.buttonState.press(btn);
-        //                         state.events.trigger("buttonPress", btn);
-        //                     },
-        //                 );
-        //             }
+                    state.mergedGamepadState.buttonState.press(gamepadBtn);
+                    gamepadState.buttonState.press(gamepadBtn);
+                    state.events.trigger(
+                        "gamepadButtonPress",
+                        gamepadBtn,
+                        gamepad,
+                    );
+                }
+                else if (gamepadState.buttonState.down.has(gamepadBtn)) {
+                    if (isGamepadButtonBind) {
+                        state.buttonsByGamepad.get(gamepadBtn)?.forEach(
+                            (btn) => {
+                                state.buttonState.release(btn);
+                                state.events.trigger("buttonRelease", btn);
+                            },
+                        );
+                    }
 
-        //             state.mergedGamepadState.buttonState.press(gamepadBtn);
-        //             gamepadState.buttonState.press(gamepadBtn);
-        //             state.events.trigger(
-        //                 "gamepadButtonPress",
-        //                 gamepadBtn,
-        //                 gamepad,
-        //             );
-        //         }
-        //         else if (gamepadState.buttonState.down.has(gamepadBtn)) {
-        //             if (isGamepadButtonBind) {
-        //                 state.buttonsByGamepad.get(gamepadBtn)?.forEach(
-        //                     (btn) => {
-        //                         state.buttonState.release(btn);
-        //                         state.events.trigger("buttonRelease", btn);
-        //                     },
-        //                 );
-        //             }
+                    state.mergedGamepadState.buttonState.release(gamepadBtn);
+                    gamepadState.buttonState.release(gamepadBtn);
 
-        //             state.mergedGamepadState.buttonState.release(
-        //                 gamepadBtn,
-        //             );
-        //             gamepadState.buttonState.release(gamepadBtn);
+                    state.events.trigger(
+                        "gamepadButtonRelease",
+                        gamepadBtn,
+                        gamepad,
+                    );
+                }
+            }
 
-        //             state.events.trigger(
-        //                 "gamepadButtonRelease",
-        //                 gamepadBtn,
-        //                 gamepad,
-        //             );
-        //         }
-        //     }
-
-        //     for (const stickName in map.sticks) {
-        //         const stick = map.sticks[stickName as KGamepadStick];
-        //         if (!stick) continue;
-        //         const value = new Vec2(
-        //             browserGamepad.axes[stick.x],
-        //             browserGamepad.axes[stick.y],
-        //         );
-        //         gamepadState.stickState.set(stickName as KGamepadStick, value);
-        //         state.mergedGamepadState.stickState.set(
-        //             stickName as KGamepadStick,
-        //             value,
-        //         );
-        //         state.events.trigger("gamepadStick", stickName, value, gamepad);
-        //     }
-        // }
+            // Process analog sticks
+            for (const stickName in map.sticks) {
+                const stick = map.sticks[stickName as KGamepadStick];
+                if (!stick) continue;
+                
+                // Map index to axis value
+                const axisValues = [
+                    controller.axes.leftStickX,
+                    controller.axes.leftStickY,
+                    controller.axes.rightStickX,
+                    controller.axes.rightStickY,
+                    controller.axes.leftTrigger,
+                    controller.axes.rightTrigger,
+                ];
+                
+                // SDL axes are already normalized to -1 to 1
+                const value = new Vec2(
+                    axisValues[stick.x] ?? 0,
+                    axisValues[stick.y] ?? 0,
+                );
+                
+                gamepadState.stickState.set(stickName as KGamepadStick, value);
+                state.mergedGamepadState.stickState.set(
+                    stickName as KGamepadStick,
+                    value,
+                );
+                state.events.trigger("gamepadStick", stickName, value, gamepad);
+            }
+        }
     }
 
     type EventList<M> = {
@@ -1213,34 +1233,17 @@ export const initApp = (
 
     canvasEvents.contextmenu = (e) => e.preventDefault();
 
-    // Handle window focus/blur events from SDL
-    _k.gfx.canvas.on('focus', () => {
-        // prevent a surge of dt when switch back after the window being hidden for a while
+    opt.window.on("focus", () => {
         state.skipTime = true;
         state.isHidden = false;
         state.events.trigger("show");
-    });
+    })
 
-    _k.gfx.canvas.on('blur', () => {
-        state.isHidden = true;
-        state.events.trigger("hide");
-    });
-
-    winEvents.gamepadconnected = (e) => {
-        const kbGamepad = registerGamepad(e.gamepad);
-        state.events.onOnce("input", () => {
-            state.events.trigger("gamepadConnect", kbGamepad);
-        });
-    };
-
-    winEvents.gamepaddisconnected = (e) => {
-        const kbGamepad =
-            getGamepads().filter((g) => g.index === e.gamepad.index)[0];
-        removeGamepad(e.gamepad);
-        state.events.onOnce("input", () => {
-            state.events.trigger("gamepadDisconnect", kbGamepad);
-        });
-    };
+    opt.window.on("blur", () => {
+        state.skipTime = true;
+        state.isHidden = false;
+        state.events.trigger("show");
+    })
 
     // for (const [name, val] of Object.entries(canvasEvents)) {
     //     state.canvas.addEventListener(

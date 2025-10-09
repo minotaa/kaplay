@@ -26,10 +26,10 @@ export function on<Ev extends GameObjEventNames>(
         obj2Handler.set(obj, ec);
     };
 
-    const ecOnTag = _k.game.events.on("tag", (obj, newTag) => {
+    const ecOnTag = _k.game.events.on("tag", (obj: any, newTag: any) => {
         if (newTag === tag) handleNew(obj);
     });
-    const ecOnUntag = _k.game.events.on("untag", (obj, oldTag) => {
+    const ecOnUntag = _k.game.events.on("untag", (obj: any, oldTag: any) => {
         if (oldTag === tag) {
             const ec = obj2Handler.get(obj)!;
             ec.cancel();

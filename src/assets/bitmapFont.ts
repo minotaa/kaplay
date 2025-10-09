@@ -94,7 +94,7 @@ export function loadBitmapFontFromSprite(
                 );
             }
             const tex = spr.tex;
-            const h = Math.max(...frames.map(q => q.h)) * tex.height;
+            const h = Math.max(...frames.map((q: any) => q.h)) * tex.height;
             return {
                 tex,
                 map: Object.fromEntries(

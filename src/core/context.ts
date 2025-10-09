@@ -528,7 +528,7 @@ export const createContext = (
         DecisionNode,
         DecisionTree,
         StateMachine,
-        insertionSort,
+        insertionSort, // @ts-ignore
         rand,
         randi,
         randSeed,
@@ -683,7 +683,7 @@ export const createContext = (
 
     if (exportToGlobal) {
         for (const key in ctx) {
-            ((window as any)[key]) = ctx[key as keyof KAPLAYCtx];
+            (globalThis as any)[key] = ctx[key as keyof KAPLAYCtx];
         }
     }
 

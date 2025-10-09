@@ -24,7 +24,7 @@ export const system = (
     when: SystemPhase[],
 ) => {
     const systems = _k.game.systems;
-    const replacingSystemIdx = systems.findIndex((s) => s.name === name);
+    const replacingSystemIdx = systems.findIndex((s: any) => s.name === name);
 
     // if existent system, remove it
     if (replacingSystemIdx != -1) {
@@ -33,7 +33,7 @@ export const system = (
 
         for (const loc of when) {
             const idx = _k.game.systemsByEvent[loc].findIndex(
-                (s) => s.name === name,
+                (s: any) => s.name === name,
             );
             _k.game.systemsByEvent[loc].splice(idx, 1);
         }

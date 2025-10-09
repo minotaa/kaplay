@@ -33,6 +33,7 @@ import { startEngineLoop } from "./engineLoop";
 import { createFontCache } from "./fontCache";
 import { createFrameRenderer } from "./frameRendering";
 
+// @ts-ignore
 export type Engine = ReturnType<typeof createEngine>;
 
 /**
@@ -44,6 +45,7 @@ export type Engine = ReturnType<typeof createEngine>;
  *
  * @returns Engine.
  */
+// @ts-ignore
 export const createEngine = (gopt: KAPLAYOpt) => {
     // Default options
     const opt = Object.assign(
@@ -55,7 +57,7 @@ export const createEngine = (gopt: KAPLAYOpt) => {
     );
 
     const window = createWindow(opt);
-    const { fontCacheC2d, fontCacheCanvas } = createFontCache();
+    const { fontCacheC2d, fontCacheCanvas } = createFontCache(); // @ts-ignore
     const app = initApp({ window, ...gopt });
 
     const gl = createContext(app.window.width, app.window.height, { 

@@ -93,9 +93,9 @@ export class Texture {
             gl.TEXTURE_2D,
             0,
             x,
-            y,-
-            this.width,
-            this.height,
+            y,
+            img.width,
+            img.height,
             gl.RGBA,
             gl.UNSIGNED_BYTE,
             data,
@@ -450,9 +450,9 @@ export class Mesh {
         this.ctx.setVertexFormat(this.vertexFormat);
         gl.drawElements(
             primitive ?? gl.TRIANGLES,
-            index ?? this.count,
+            count ?? this.count,     // count of elements
             gl.UNSIGNED_SHORT,
-            count ?? 0,
+            index ?? 0,              // byte offset
         );
         this.ctx.popArrayBuffer();
         this.ctx.popElementArrayBuffer();

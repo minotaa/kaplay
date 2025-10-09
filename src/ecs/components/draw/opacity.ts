@@ -39,7 +39,7 @@ export function opacity(a: number): OpacityComp {
                 0,
                 this.opacity,
                 time,
-                (a) => this.opacity = a,
+                (a: number) => this.opacity = a,
                 easeFunc,
             );
         },
@@ -48,7 +48,7 @@ export function opacity(a: number): OpacityComp {
                 this.opacity,
                 0,
                 time,
-                (a) => this.opacity = a,
+                (a: number) => this.opacity = a,
                 easeFunc,
             );
         },
